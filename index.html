@@ -14,9 +14,16 @@
 	<body>
 
 		<video id="localVideo" autoplay playsinline></video>
+		<video id="screenVideo" autoplay playsinline></video>
+		<video id="screenVideo" autoplay playsinline></video>
+
 		<video id="remoteVideo" autoplay playsinline></video>
+		<video id="remoteScreenVideo" autoplay playsinline></video>
 
 		<div>
+			<p>
+				<button id="startScreen">Start Screen Capture</button>
+			</p>
 			<p>
 				If you are the host, copy the offer and send it to the remote:
 				<button id="createOffer">create</button><input type="text" id="localOffer" placeholder="local offer"/><br/>
@@ -34,13 +41,16 @@
 		<script type="text/javascript">
 			'use strict';
 
-			const mediaStreamConstraints = {video: true};
-			const offerOptions = {offerToReceiveVideo:1};
-			const servers = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
+			const mediaStreamConstraints = {video: true, audio: true};
+			const offerOptions = {offerToReceiveVideo:1, offerToReceiveAudio:1};
+			const servers = {'iceServers': [{'urls': ['stun:stun.l.google.com:19302'] }]};
 
 			const localVideo = document.getElementById('localVideo');
+			const screenVideo = document.getElementById('screenVideo');
 			const remoteVideo = document.getElementById('remoteVideo');
+			const remoteScreenVideo = document.getElementById('remoteScreenVideo');
 
+			const startScreen = document.getElementById('startScreen');
 			const localOffer = document.getElementById('localOffer');
 			const remoteOffer = document.getElementById('remoteOffer');
 			const createOffer = document.getElementById('createOffer');
@@ -62,9 +72,13 @@
 
 			peerConnection.addEventListener('icecandidate', handleConnection);
 			peerConnection.addEventListener('addstream', gotRemoteMediaStream);
+			peerConnection.addEventListener('track', console.log);
 			
 			const peerMediaStream = new MediaStream();
 			peerConnection.addStream(peerMediaStream);
+
+			const peerScreenStream = new MediaStream();
+			peerConnection.addStream(peerScreenStream);
 
 			// get the video media stream
 			navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
@@ -77,6 +91,17 @@
 					}
 				)
 				.catch(logError);
+
+			startScreen.onclick = () => {
+				navigator.mediaDevices.getDisplayMedia(mediaStreamConstraints)
+						.then((mediaStream) => {
+							screenVideo.srcObject = mediaStream;
+
+							for (const track of mediaStream.getTracks()) {
+								peerScreenStream.addTrack(track);
+							}
+						}).catch(logError);
+			};
 	
 			function handleConnection(event) {
 
@@ -101,9 +126,10 @@
 			}
 					
 			function gotRemoteMediaStream(event) {
-
 				const mediaStream = event.stream;
-				remoteVideo.srcObject = mediaStream;
+				console.log(mediaStream)
+				//remoteVideo.srcObject = mediaStream;
+				//remoteScreen.srcObject = new MediaStream(mediaStream.getTracks().filter((_, i) => i >= 2))
 				console.log('remote peer connection received remote stream')
 			}
 
