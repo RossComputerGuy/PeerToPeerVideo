@@ -126,10 +126,8 @@
 			}
 					
 			function gotRemoteMediaStream(event) {
-				const mediaStream = event.stream;
-				console.log(mediaStream)
-				//remoteVideo.srcObject = mediaStream;
-				//remoteScreen.srcObject = new MediaStream(mediaStream.getTracks().filter((_, i) => i >= 2))
+				remoteVideo.srcObject = event.stream[0];
+				remoteScreenVideo.srcObject = event.stream[1];
 				console.log('remote peer connection received remote stream')
 			}
 
